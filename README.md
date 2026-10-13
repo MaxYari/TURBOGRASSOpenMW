@@ -1,5 +1,7 @@
 # TURBOGRASS
 
+[![TURBOGRASS demo video](https://img.youtube.com/vi/6ZHIpCjz5Co/hqdefault.jpg)](https://www.youtube.com/watch?v=6ZHIpCjz5Co)
+
 A grass sway shader that will tickle you in the ways you never knew you wanted. OpenMW. Works with any groundcover. The sway strength and behaviour changes with weather, supports both Wareya and Rafael PBR.
 
 **Requires OpenMW 0.51.** This is a core shader mod: it replaces one of the engine's own shader files, and those change between OpenMW versions. This specific shader file probably does not change often, so might work in later versions as well.
