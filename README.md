@@ -1,83 +1,41 @@
 # TURBOGRASS
 
-Grass that moves like it's actually in the wind, for OpenMW 0.51.
+A grass sway shader that will tickle you in the ways you never knew you wanted. OpenMW. Works with any groundcover. The sway strength and behaviour changes with weather, supports both Wareya and Rafael PBR.
 
-TURBOGRASS replaces OpenMW's grass (groundcover) sway. Instead of wobbling in place, grass leans downwind and bends with real curvature. Gust fronts roll across whole fields, and blades flutter. It all follows the weather: a gentle sway with the odd gust on a clear day, constant motion in rain, wild grass in a thunderstorm and chaos in a blight storm.
+**Requires OpenMW 0.51.** This is a core shader mod: it replaces one of the engine's own shader files, and those change between OpenMW versions. This specific shader file probably does not change often, so might work in later versions as well.
 
-**Requires OpenMW 0.51.** This is a core shader mod: it replaces one of the engine's own shader files, and those change between OpenMW versions.
-
-<p><a href="https://ko-fi.com/maxyari">Support me on Ko-fi</a></p>
-
-## What it does
-
-- **Real bending.** Blades curve over and keep their length, with the tips dropping as they bend, instead of skewing sideways.
-- **Gusts.** Wide gust fronts sweep across the land in the wind direction. Grass leans into a gust quickly, holds while it lasts, and eases back up slowly.
-- **Flutter.** A fine, quick shiver of the blades. Its speed drifts slowly across the land, and gusts make it faster.
-- **Weather.** Everything scales with each weather's wind:
-  - Clear weather has a light lean, a gentle sway and occasional gusts.
-  - Rain keeps the grass moving.
-  - In a thunderstorm the grass stays leaning and gusts come constantly.
-  - Ash and blight storms whip it around without letting it stand up.
-- **Light.** Grass shading follows the bend, so gust fronts show up as moving light and shade across the fields.
-- **Stomping.** OpenMW's grass stomping settings still work, and grass now bends away from you.
-
-The wind blows the same way the water's waves move.
+<p><a href="https://ko-fi.com/maxyari"><img src="img/morrowind_kofi_banner_left_half_bright124.gif" width="25.72%" align="top" alt="Support me on Ko-fi"></a><a href="https://ko-fi.com/maxyari"><img src="img/banner_right.png" width="73.88%" align="top" alt="Support me on Ko-fi"></a><br><a href="https://ko-fi.com/maxyari"><img src="img/banner_glow.png" width="99.6%" align="top" alt=""></a></p>
 
 ## Requirements
 
 - OpenMW 0.51 (release).
-- A grass mod, for example Remiros' Groundcover or Aesthesia Groundcover, with groundcover enabled in OpenMW.
+- A grass (groundcover) mod properly installed, works with any groundcover mod.
 
 ## Which archive to use
 
-- **TURBOGRASS-1.0** if you use OpenMW's own shaders.
+- **TURBOGRASS-1.0** if you use OpenMW's standard shaders (i.e. you did not install any PBR shaders).
 - **TURBOGRASS-1.0-Wareya-PBR** if you use [Wareya's PBR shaders](https://github.com/wareya/OpenMW-PBR) for OpenMW 0.51.
 - **TURBOGRASS-1.0-Rafael-PBR** if you use Rafael's Enhanced PBR Lighting 2.3 (the "OpenMW 0.51" folder), from [Rafael's Shader Pack](https://www.nexusmods.com/morrowind/mods/53667).
 
-Both PBR packs change the grass shaders too, so the regular archive would break grass with them. Install the PBR shaders first, then the matching TURBOGRASS archive over them.
-
 ## Installation
 
-Don't install this unless you know what you're doing.
+If you use PBR shaders - Install the PBR shaders first, then the matching TURBOGRASS archive over them.
 
 1. Find the `resources/shaders` folder of your OpenMW installation.
-2. Make a backup of that `shaders` folder by COPYING it (NOT by renaming it).
+2. Make a backup of that `shaders` folder by COPYING it (NOT by renaming it). Trust me, actually do it and save it somewhere, core shaders are prone to breaking from modding.
 3. Copy the `shaders` folder from this archive over it. Only `shaders/compatibility/groundcover.vert` is replaced.
 
-Do not install this over another core shader mod that changes `groundcover.vert` (other than Wareya's or Rafael's PBR, which have their own archives). It will not work.
+Do not install this over another core shader mod that changes `groundcover.vert` (other than Wareya's or Rafael's PBR, which have their own archives). It will not work. Or it might, if you are lucky, I mean honestly install whatever onto whatever, we live only once, see the game burst in flames, go outside, touch grass, enjoy life!
 
-Updating OpenMW replaces its shaders, which undoes TURBOGRASS. Reinstall it after updating, but only if this version of TURBOGRASS supports the new OpenMW version.
+Updating OpenMW replaces its shaders, which undoes TURBOGRASS. Reinstall it after updating (assuming TURBOGRASS supports that OpenMW version from the future, probably it does, but who knows).
 
 ## Uninstallation
 
 Copy `shaders/compatibility/groundcover.vert` back from your backup.
 
-## Tuning
-
-All the settings are `WIND_*` defines near the top of `shaders/compatibility/groundcover.vert`, each with a comment. The ones you're most likely to want:
-
-| Define | What it does |
-| --- | --- |
-| `WIND_DIRECTION` | Where the wind blows to |
-| `WIND_LEAN_CALM`, `WIND_LEAN_FULL` | Steady lean, from windless weather to a blight storm |
-| `WIND_GUST_CALM`, `WIND_GUST_FULL` | Extra lean while a gust passes |
-| `WIND_GUST_START_CALM`, `WIND_GUST_START_FULL` | How often gusts come; lower means more gusts |
-| `WIND_GUST_LENGTH`, `WIND_GUST_SPEED` | Size and speed of the gust fronts |
-| `WIND_FLUTTER_CALM`, `WIND_FLUTTER_FULL` | Flutter strength |
-| `WIND_STORM_*` | Extra wildness from rain up to a thunderstorm |
-| `WIND_FURY_*` | Extra wildness from a thunderstorm up to a blight storm |
-
-To see your changes while the game runs, open the console, type `luap`, then enter:
-
-```
-require('openmw.debug').setShaderHotReloadEnabled(true)
-```
-
-Every time you save the file after that, the shader reloads.
-
 ## Credits and license
 
-TURBOGRASS by Max Yari.
+TURBOGRASS by me (Max Yari), the overall idea of how this should be implemented is mine, actual implementation is by Claude Code. Took me 3 hours to make this mod, half of which I spent making a video, Nexus art assets and this very page. Crazy, I know.
 
 It is built on the groundcover shader from OpenMW 0.51.0. The PBR variants are built on [Wareya's PBR shaders](https://github.com/wareya/OpenMW-PBR) for OpenMW 0.51 and on Rafael's Enhanced PBR Lighting 2.3 from [Rafael's Shader Pack](https://www.nexusmods.com/morrowind/mods/53667).
 
