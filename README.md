@@ -31,7 +31,10 @@ The wind blows the same way the water's waves move.
 ## Which archive to use
 
 - **TURBOGRASS-1.0** if you use OpenMW's own shaders.
-- **TURBOGRASS-1.0-Wareya-PBR** if you use [Wareya's PBR shaders](https://github.com/wareya/OpenMW-PBR) for OpenMW 0.51. Those change the grass shaders too, so the regular archive would break grass with them. Install Wareya's shaders first, then this archive over them.
+- **TURBOGRASS-1.0-Wareya-PBR** if you use [Wareya's PBR shaders](https://github.com/wareya/OpenMW-PBR) for OpenMW 0.51.
+- **TURBOGRASS-1.0-Rafael-PBR** if you use Rafael's Enhanced PBR Lighting 2.3 (the "OpenMW 0.51" folder), from [Rafael's Shader Pack](https://www.nexusmods.com/morrowind/mods/53667).
+
+Both PBR packs change the grass shaders too, so the regular archive would break grass with them. Install the PBR shaders first, then the matching TURBOGRASS archive over them.
 
 ## Installation
 
@@ -41,7 +44,7 @@ Don't install this unless you know what you're doing.
 2. Make a backup of that `shaders` folder by COPYING it (NOT by renaming it).
 3. Copy the `shaders` folder from this archive over it. Only `shaders/compatibility/groundcover.vert` is replaced.
 
-Do not install this over another core shader mod that changes `groundcover.vert` (other than Wareya's PBR, which has its own archive). It will not work.
+Do not install this over another core shader mod that changes `groundcover.vert` (other than Wareya's or Rafael's PBR, which have their own archives). It will not work.
 
 Updating OpenMW replaces its shaders, which undoes TURBOGRASS. Reinstall it after updating, but only if this version of TURBOGRASS supports the new OpenMW version.
 
@@ -76,6 +79,6 @@ Every time you save the file after that, the shader reloads.
 
 TURBOGRASS by Max Yari.
 
-It is built on the groundcover shader from OpenMW 0.51.0. The PBR variant is built on [Wareya's PBR shaders](https://github.com/wareya/OpenMW-PBR) for OpenMW 0.51.
+It is built on the groundcover shader from OpenMW 0.51.0. The PBR variants are built on [Wareya's PBR shaders](https://github.com/wareya/OpenMW-PBR) for OpenMW 0.51 and on Rafael's Enhanced PBR Lighting 2.3 from [Rafael's Shader Pack](https://www.nexusmods.com/morrowind/mods/53667).
 
-Licensed under the GNU GPL v3, like OpenMW and Wareya's shaders. See LICENSE and AUTHORS.md for more information. AUTHORS.md contains a list of contributors to OpenMW, only some of whom have contributed to the shader code that TURBOGRASS is based on.
+Licensed under the GNU GPL v3, like OpenMW and both PBR shader packs. See LICENSE and AUTHORS.md for more information. AUTHORS.md contains a list of contributors to OpenMW, only some of whom have contributed to the shader code that TURBOGRASS is based on.
