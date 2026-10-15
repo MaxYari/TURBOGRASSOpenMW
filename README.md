@@ -15,9 +15,9 @@ A grass sway shader that will tickle you in the ways you never knew you wanted. 
 
 ## Which archive to use
 
-- **TURBOGRASS-1.0** if you use OpenMW's standard shaders (i.e. you did not install any PBR shaders).
-- **TURBOGRASS-1.0-Wareya-PBR** if you use [Wareya's PBR shaders](https://github.com/wareya/OpenMW-PBR) for OpenMW 0.51.
-- **TURBOGRASS-1.0-Rafael-PBR** if you use Rafael's Enhanced PBR Lighting 2.3 (the "OpenMW 0.51" folder), from [Rafael's Shader Pack](https://www.nexusmods.com/morrowind/mods/53667).
+- **TURBOGRASS** if you use OpenMW's standard shaders (i.e. you did not install any PBR shaders).
+- **TURBOGRASS Wareya PBR** if you use [Wareya's PBR shaders](https://github.com/wareya/OpenMW-PBR) for OpenMW 0.51, [Liam's Kitbashed PBR](https://www.nexusmods.com/morrowind/mods/59113) or [Complete Water Shaders PBR](https://www.nexusmods.com/morrowind/mods/59485). Using some other PBR shaders I haven't tested? Try this one with them as well.
+- **TURBOGRASS Rafael PBR** if you use Rafael's Enhanced PBR Lighting 2.3 (the "OpenMW 0.51" folder), from [Rafael's Shader Pack](https://www.nexusmods.com/morrowind/mods/53667).
 
 ## Installation
 
@@ -27,7 +27,7 @@ If you use PBR shaders - Install the PBR shaders first, then the matching TURBOG
 2. Make a backup of that `shaders` folder by COPYING it (NOT by renaming it). Trust me, actually do it and save it somewhere, core shaders are prone to breaking from modding.
 3. Copy the `shaders` folder from this archive over it. Only `shaders/compatibility/groundcover.vert` is replaced.
 
-Do not install this over another core shader mod that changes `groundcover.vert` (other than Wareya's or Rafael's PBR, which have their own archives). It will not work. Or it might, if you are lucky, I mean honestly install whatever onto whatever, we live only once, see the game burst in flames, go outside, touch grass, enjoy life!
+Do not install this over another core shader mod that changes `groundcover.vert` (other than the PBR shaders listed above, which have a matching archive). It will not work. Or it might, if you are lucky, I mean honestly install whatever onto whatever, we live only once, see the game burst in flames, go outside, touch grass, enjoy life!
 
 Updating OpenMW replaces its shaders, which undoes TURBOGRASS. Reinstall it after updating (assuming TURBOGRASS supports that OpenMW version from the future, probably it does, but who knows).
 

@@ -1,0 +1,185 @@
+name: Release to Nexus Mods
+
+# A push to main packs the mod and uploads each of its three archives as a new version of its file on
+# the Nexus page below, but only when the last commit pushed has a message starting with [nexus] (any
+# case). Anything else is pushed without uploading.
+#
+# That commit's description - everything under its first line - becomes the version's changelog.
+# Co-authored-by / Signed-off-by style trailers are left out. With no description, the first line is
+# used instead, minus the [nexus] tag. Each file's description is fixed below and says which shaders
+# that file is for. For example:
+#
+#   [nexus] Complete Water Shaders PBR support
+#
+#   The Wareya PBR archive also works with Liam's Kitbashed PBR and Complete Water Shaders PBR.
+#
+# The version is the one in the "// TURBOGRASS <version>," line of VERSION_SOURCE. If Nexus already
+# has it on any of the three files (you didn't bump it, or a run failed halfway), a counter is
+# appended: 1.1 -> 1.1.1 -> 1.1.2 ... until you bump it. All three files always get the same version,
+# and package.py puts it in the archive names and the shipped shaders' version line, so they always
+# match Nexus. The README names files as Nexus shows them, without versions.
+#
+# The Nexus API can't edit the mod page description. README.nexus.bbcode (kept in sync by the
+# .githooks/pre-commit hook) has it ready to paste; every run also puts a copy with image links
+# pinned to that commit in the job summary.
+#
+# Can also be run by hand: Actions tab -> Release to Nexus Mods -> Run workflow, or
+#   gh workflow run nexus-release.yml [-f version=1.1] [-f changelog="..."]
+# A manual run always uploads, and changelog (when given) replaces the commit's description.
+#
+# One-time setup: repo Settings -> Secrets and variables -> Actions -> New repository secret
+#   NEXUSMODS_API_KEY = the "Personal API Key" from https://www.nexusmods.com/settings/api-keys
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version to publish (default - the one in the version source file)
+        required: false
+      changelog:
+        description: Changelog text (default - the last commit's description)
+        required: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nexus-upload
+  cancel-in-progress: false
+
+env:
+  NEXUS_PAGE: https://www.nexusmods.com/morrowind/mods/60591
+  NEXUSMODS_MOD_ID: "429496790191" # internal mod ID, not the one from the page URL
+  VERSION_SOURCE: shaders/compatibility/groundcover.vert
+  # One entry per file on Nexus, from the "Advanced" panel of each. Not secret. Nexus allows only
+  # letters, digits, spaces and _'().- in a file name - no &.
+  STOCK_FILE_ID: "8150283"
+  STOCK_NAME: TURBOGRASS
+  STOCK_ABOUT: For OpenMW's standard shaders, if you did not install any PBR shaders.
+  WAREYA_FILE_ID: "8150280"
+  WAREYA_NAME: TURBOGRASS Wareya PBR
+  WAREYA_ABOUT: >-
+    For Wareya's PBR shaders for OpenMW 0.51. Also works with Liam's Kitbashed PBR and Complete Water
+    Shaders PBR. Using some other PBR shaders I haven't tested? Try this one with them as well.
+  RAFAEL_FILE_ID: "8150277"
+  RAFAEL_NAME: TURBOGRASS Rafael PBR
+  RAFAEL_ABOUT: For Rafael's Enhanced PBR Lighting 2.3 (the "OpenMW 0.51" folder), from Rafael's Shader Pack.
+
+jobs:
+  nexus:
+    # Pushes upload only when the last pushed commit asks for it. startsWith ignores case. Manual runs
+    # have no head commit, so they always upload.
+    if: ${{ github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, '[nexus]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Work out version and changelog
+        id: meta
+        env:
+          NEXUSMODS_API_KEY: ${{ secrets.NEXUSMODS_API_KEY }}
+          INPUT_VERSION: ${{ inputs.version }}
+          INPUT_CHANGELOG: ${{ inputs.changelog }}
+        run: |
+          base="${INPUT_VERSION:-$(grep -m1 -oE '^// TURBOGRASS [0-9][0-9A-Za-z.-]*,' "$VERSION_SOURCE" | grep -oE '[0-9][0-9A-Za-z.-]*' || true)}"
+          base="${base#v}"
+          if [ -z "$base" ]; then
+            echo "::error::Could not find '// TURBOGRASS <version>,' in $VERSION_SOURCE"
+            exit 1
+          fi
+
+          existing=""
+          for file_id in "$STOCK_FILE_ID" "$WAREYA_FILE_ID" "$RAFAEL_FILE_ID"; do
+            if ! versions=$(curl -fsS -H "apikey: $NEXUSMODS_API_KEY" \
+                "https://api.nexusmods.com/v3/mod-files/$file_id/versions" |
+                python3 -c 'import json, sys; print("\n".join(v["version"] for v in json.load(sys.stdin)["data"]["versions"]))'); then
+              echo "::error::Could not read versions of file $file_id from Nexus - is the NEXUSMODS_API_KEY secret set?"
+              exit 1
+            fi
+            existing="$existing$versions"$'\n'
+          done
+
+          version="$base"
+          n=0
+          while printf '%s\n' "$existing" | grep -qxF "$version"; do
+            n=$((n + 1))
+            version="$base.$n"
+          done
+          echo "Publishing version $version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+          if [ -n "$INPUT_CHANGELOG" ]; then
+            notes="$INPUT_CHANGELOG"
+          else
+            # The commit's description, without trailers or leading blank lines. $( ) drops the
+            # trailing ones.
+            notes=$(git log -1 --format=%b | sed -E '/^[A-Za-z-]+-by: /Id' | sed '/./,$!d')
+            if [ -z "$notes" ]; then
+              notes=$(git log -1 --format=%s | sed -E 's/^\[nexus\][[:space:]]*//I')
+            fi
+          fi
+          printf 'Changelog:\n%s\n' "$notes"
+          {
+            echo "notes<<NOTES_EOF"
+            printf '%s\n' "$notes"
+            echo "NOTES_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      # Image URLs are pinned to this commit, so the pasted description keeps working
+      # even if images are later moved or deleted on the branch.
+      - name: Nexus description to job summary
+        run: |
+          python3 tools/readme_to_nexus.py --ref "${{ github.sha }}" -o "$RUNNER_TEMP/description.bbcode"
+          {
+            echo "### Nexus description"
+            echo "Paste into the mod page description editor: $NEXUS_PAGE"
+            echo '````text'
+            cat "$RUNNER_TEMP/description.bbcode"
+            echo '````'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Pack mod archives
+        run: python3 package.py "${{ steps.meta.outputs.version }}"
+
+      # The changelog belongs to the mod, not to a file, and Nexus appends rather than replaces it,
+      # so only this first upload sends it.
+      - name: Upload to Nexus Mods - standard shaders
+        uses: Nexus-Mods/upload-action@v1.0.0-beta.10
+        with:
+          api_key: ${{ secrets.NEXUSMODS_API_KEY }}
+          file_id: ${{ env.STOCK_FILE_ID }}
+          mod_id: ${{ env.NEXUSMODS_MOD_ID }}
+          filename: dist/TURBOGRASS-${{ steps.meta.outputs.version }}.zip
+          display_name: ${{ env.STOCK_NAME }}
+          category: main
+          version: ${{ steps.meta.outputs.version }}
+          description: ${{ env.STOCK_ABOUT }}
+          changelog: ${{ steps.meta.outputs.notes }}
+          update_mod_version: true
+          archive_existing_version: true
+
+      - name: Upload to Nexus Mods - Wareya PBR
+        uses: Nexus-Mods/upload-action@v1.0.0-beta.10
+        with:
+          api_key: ${{ secrets.NEXUSMODS_API_KEY }}
+          file_id: ${{ env.WAREYA_FILE_ID }}
+          filename: dist/TURBOGRASS-${{ steps.meta.outputs.version }}-Wareya-PBR.zip
+          display_name: ${{ env.WAREYA_NAME }}
+          category: main
+          version: ${{ steps.meta.outputs.version }}
+          description: ${{ env.WAREYA_ABOUT }}
+          archive_existing_version: true
+
+      - name: Upload to Nexus Mods - Rafael PBR
+        uses: Nexus-Mods/upload-action@v1.0.0-beta.10
+        with:
+          api_key: ${{ secrets.NEXUSMODS_API_KEY }}
+          file_id: ${{ env.RAFAEL_FILE_ID }}
+          filename: dist/TURBOGRASS-${{ steps.meta.outputs.version }}-Rafael-PBR.zip
+          display_name: ${{ env.RAFAEL_NAME }}
+          category: main
+          version: ${{ steps.meta.outputs.version }}
+          description: ${{ env.RAFAEL_ABOUT }}
+          archive_existing_version: true

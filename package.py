@@ -1,16 +1,20 @@
 # Builds the release archives into dist/:
 #   TURBOGRASS-<version>.zip             for OpenMW's own shaders
-#   TURBOGRASS-<version>-Wareya-PBR.zip  for Wareya's PBR shaders for OpenMW 0.51
+#   TURBOGRASS-<version>-Wareya-PBR.zip  for Wareya's PBR shaders for OpenMW 0.51, and for Liam's Kitbashed
+#                                        PBR and Complete Water Shaders PBR, which ship Wareya's groundcover.vert
 #   TURBOGRASS-<version>-Rafael-PBR.zip  for Rafael's Enhanced PBR Lighting 2.3, OpenMW 0.51 folder
 # Each holds one root folder with README.md, LICENSE, AUTHORS.md and shaders/, like Wareya's releases.
 # The PBR shaders are generated from shaders/compatibility/groundcover.vert, which stays the only source:
 # each variant swaps the parts that must match its pack's groundcover.frag and lighting library.
 #
-# Usage: python3 package.py
+# Usage: python3 package.py [version]
+# The version defaults to the one in the shader's "// TURBOGRASS <version>," line; a given one replaces it
+# there in the built shaders, as well as naming the archives.
 
 import pathlib
 import re
 import shutil
+import sys
 import zipfile
 
 ROOT = pathlib.Path(__file__).resolve().parent
@@ -118,7 +122,10 @@ def build(name, shader_text, dist):
 
 def main():
     source = (ROOT / SHADER).read_text()
-    version = re.search(r"// TURBOGRASS (\S+),", source).group(1)
+    line = re.search(r"// TURBOGRASS (\S+),", source)
+    version = sys.argv[1] if len(sys.argv) > 1 else line.group(1)
+    # A given version is the one going on Nexus, so the shipped shaders say it too
+    source = source[:line.start(1)] + version + source[line.end(1):]
     variants = [(suffix, make_variant(source, replacements)) for suffix, replacements in VARIANTS]
     dist = ROOT / "dist"
     if dist.exists():
