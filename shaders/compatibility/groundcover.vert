@@ -59,7 +59,7 @@ uniform vec3 playerPos;
     #define STOMP_INTENSITY_LEVEL @groundcoverStompIntensity
 #endif
 
-// TURBOGRASS 1.0, wind for grass. Grass leans downwind and sways around that lean. Gusts roll across the
+// TURBOGRASS 1.1, wind for grass. Grass leans downwind and sways around that lean. Gusts roll across the
 // field as fronts of scrolling gradient noise: where one arrives, grass leans further over in well under a
 // second, holds there while it lasts, then eases back out over about two seconds. In storms the lean also
 // swells and falls with the same noise, so grass never stands straight. Vertices swing around the ground
@@ -69,7 +69,19 @@ uniform vec3 playerPos;
 // taller ones more, easing off towards WIND_MAX_BEND. CALM is windless weather, FULL a blight storm
 // (Weather_*_Wind_Speed 0.9; clear is 0.1, rain 0.3, thunderstorm 0.5).
 #define WIND_DIRECTION    vec2(-0.53, 0.848) // where the wind blows to; matches the water shader's waves
-#define WIND_REF_HEIGHT   64.0
+// Height is measured from the root, WIND_ROOT_DEPTH mesh units below the mesh origin, and nothing below it
+// bends. Groundcover mods place the origin above the terrain, with blades reaching down into it to cover
+// slopes: the ground is 15-22 units below it in Remiros', 20-25 in Fantasia, 27 in Aesthesia. Rock meshes
+// top out 6-8 units below it, so a root deeper than that shifts their tops very slightly.
+// A blade's lowest vertex is buried and never moves, so a blade whose next vertex is high up swings around
+// that buried end and its base slides along the ground; on slopes some blades also stand on ground above
+// the root. Storms bend far enough to show both, so the root rises from rain to a thunderstorm, then on
+// with the fury to the mesh origin by a blight storm.
+#define WIND_ROOT_DEPTH        10.0
+#define WIND_ROOT_DEPTH_STORM  5.0
+#define WIND_ROOT_RISE_FROM    0.3  // Weather_*_Wind_Speed where the root starts rising (rain)
+#define WIND_ROOT_RISE_TO      0.5  // and where it reaches WIND_ROOT_DEPTH_STORM (thunderstorm)
+#define WIND_REF_HEIGHT   67.0
 #define WIND_MAX_BEND     1.5
 #define WIND_LEAN_CALM    0.04   // steady lean downwind
 #define WIND_LEAN_FULL    0.6
@@ -335,9 +347,12 @@ void main(void)
     float clumpDist = length(gl_ModelViewMatrix * vec4(position, 1.0));
     vec2 bendDir = vec2(1.0, 0.0);
     float bendAngle = 0.0;
+    float rootDepth = mix(mix(WIND_ROOT_DEPTH, WIND_ROOT_DEPTH_STORM,
+            clamp((windSpeed - WIND_ROOT_RISE_FROM) / (WIND_ROOT_RISE_TO - WIND_ROOT_RISE_FROM), 0.0, 1.0)),
+        0.0, clamp((windSpeed - WIND_FURY_FROM) / (WIND_FURY_TO - WIND_FURY_FROM), 0.0, 1.0));
     if (clumpDist <= @groundcoverFadeEnd)
         worldPos.xyz += groundcoverBend(worldPos.xyz, displacedVertex.xyz, windHash(position + aRotation * 100.0),
-            max(gl_Vertex.z, 0.0) * scale, clumpDist, bendDir, bendAngle);
+            max(gl_Vertex.z + rootDepth, 0.0) * scale, clumpDist, bendDir, bendAngle);
     vec4 viewPos = osg_ViewMatrix * worldPos;
 
     gl_ClipVertex = viewPos;
